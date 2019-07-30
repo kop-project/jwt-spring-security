@@ -37,7 +37,7 @@ public class AuthRestController {
     public ResponseEntity login(@RequestBody AuthReqDto authReqDto) {
 
         String username = authReqDto.getUsername();
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, authReqDto.getPassword()));
+       // authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, authReqDto.getPassword()));
         UserEntity userEntity = userService.findByUserName(username);
 
         if (userEntity == null) {
