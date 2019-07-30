@@ -1,5 +1,6 @@
-package com.example.demo.entity;
+package com.example.demo.entity.jwt;
 
+import com.example.demo.entity.Role;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -11,7 +12,7 @@ import java.util.List;
 @Entity
 @Table(name ="users")
 @Data
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

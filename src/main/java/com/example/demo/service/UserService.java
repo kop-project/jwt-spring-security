@@ -1,14 +1,13 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.User;
+import com.example.demo.entity.jwt.UserEntity;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface UserService {
-    User register(User user);
-    List<User> getAllUsers();
-    User findByUserName(User user);
-    void delete(User user);
+    UserEntity register(UserEntity userEntity);
+    List<UserEntity> getAllUsers();
+    UserEntity findByUserName(String username);
+    void delete(UserEntity userEntity);
 
 }

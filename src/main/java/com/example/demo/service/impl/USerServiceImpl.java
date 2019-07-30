@@ -1,17 +1,15 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.entity.Role;
-import com.example.demo.entity.User;
+import com.example.demo.entity.jwt.UserEntity;
 import com.example.demo.repo.UserRepo;
 import com.example.demo.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 @Service
@@ -24,35 +22,35 @@ public class USerServiceImpl implements UserService {
     @Autowired
     private UserRepo userRepo;
 
-    private final BCryptPasswordEncoder passwordEncoder;
+  /*  private final BCryptPasswordEncoder passwordEncoder;
 
     public USerServiceImpl(BCryptPasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
-    }
+    }*/
 
     @Override
-    public User register(User user) {
+    public UserEntity register(UserEntity userEntity) {
 
-        user.setRoleEntities(Collections.singletonList(Role.ACTIVE));
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepo.save(user);
+        userEntity.setRoleEntities(Collections.singletonList(Role.ACTIVE));
+        //userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
+        userRepo.save(userEntity);
 
         log.info("Пользователь user: {} успешно зарегестрирован");
         return null;
     }
 
     @Override
-    public List<User> getAllUsers() {
+    public List<UserEntity> getAllUsers() {
         return userRepo.findAll();
     }
 
     @Override
-    public User findByUserName(User user) {
-        return userRepo.findByUsername(user.getUsername());
+    public UserEntity findByUserName(String username) {
+        return userRepo.findByUsername(username);
     }
 
     @Override
-    public void delete(User user) {
-        userRepo.delete(user);
+    public void delete(UserEntity userEntity) {
+        userRepo.delete(userEntity);
     }
 }
