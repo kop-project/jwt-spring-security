@@ -1,34 +1,37 @@
-package com.example.demo.entity.jwt;
+package com.example.demo.model;
 
-import com.example.demo.entity.Role;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 
-@Entity
-@Table(name ="users")
+/**
+ * Base class with property 'id'.
+ * Used as a base class for all objects that requires this property.
+ *
+ * @author Eugene Suleimanov
+ * @version 1.0
+ */
+
+@MappedSuperclass
 @Data
-public class UserEntity {
+public class BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @CreatedDate
+    @Column(name = "created")
     private Date created;
 
     @LastModifiedDate
+    @Column(name = "updated")
     private Date updated;
 
-    private String username;
-    private String password;
-
-    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
-    private List<Role> roleEntities;
+    @Column(name = "status")
+    private Status status;
 }
