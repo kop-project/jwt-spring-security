@@ -24,6 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final String ADMIN_ENDPOINT = "/api/v1/admin/**";
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
+    private static final String REFRESH_ENDPOINT = "/api/auth/refresh-token";
     private static final String USER_GET_ENDPOINT = "/api/users/**";
 
     @Autowired
@@ -45,7 +46,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers(LOGIN_ENDPOINT, USER_GET_ENDPOINT).permitAll()
+                .antMatchers(LOGIN_ENDPOINT, USER_GET_ENDPOINT, REFRESH_ENDPOINT).permitAll()
                 .antMatchers(ADMIN_ENDPOINT).hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()

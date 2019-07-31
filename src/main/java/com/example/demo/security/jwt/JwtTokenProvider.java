@@ -1,6 +1,12 @@
 package com.example.demo.security.jwt;
 
+import com.example.demo.dto.RefreshTokenDto;
+import com.example.demo.model.AccessToken;
+import com.example.demo.model.RefreshToken;
 import com.example.demo.model.Role;
+import com.example.demo.model.TokenEntity;
+import com.example.demo.repository.AccessTokenRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +20,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Util class that provides methods for generation, validation, etc. of JWT token.
@@ -29,11 +33,17 @@ import java.util.List;
 @Component
 public class JwtTokenProvider {
 
+    @Autowired
+    AccessTokenRepository accessTokenRepository;
+
     @Value("${jwt.token.secret}")
     private String secret;
 
-    @Value("${jwt.token.expired}")
-    private long validityInMilliseconds;
+    @Value("${jwt.access_token.expired}")
+    private long validityAccessInMilliseconds;
+
+    @Value("${jwt.refresh_token.expired}")
+    private long validityRefreshInMilliseconds;
 
 
     @Autowired
@@ -50,21 +60,92 @@ public class JwtTokenProvider {
         secret = Base64.getEncoder().encodeToString(secret.getBytes());
     }
 
-    public String createToken(String username, List<Role> roles) {
+    public Object createToken(String username, List<Role> roles, String typeToken) {
 
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("roles", getRoleNames(roles));
 
         Date now = new Date();
-        Date validity = new Date(now.getTime() + validityInMilliseconds);
+        Date validity;
+        AccessToken accessToken = new AccessToken();
+        RefreshToken refreshToken = new RefreshToken();
 
-        return Jwts.builder()//
+        if ("access".equals(typeToken)) {
+            validity = new Date(now.getTime() + validityAccessInMilliseconds);
+            accessToken.setUsername(username);
+            accessToken.setCreated(now);
+            accessToken.setUpdated(validity);
+        } else {
+            validity = new Date(now.getTime() + validityRefreshInMilliseconds);
+            refreshToken.setUsername(username);
+            refreshToken.setCreated(now);
+            refreshToken.setUpdated(validity);
+        }
+
+        String token = Jwts.builder()//
                 .setClaims(claims)//
                 .setIssuedAt(now)//
                 .setExpiration(validity)//
                 .signWith(SignatureAlgorithm.HS256, secret)//
                 .compact();
+
+        if ("access".equals(typeToken)) {
+            accessToken.setAccessToken(token);
+        } else {
+            refreshToken.setRefreshToken(token);
+        }
+
+        return accessToken.getAccessToken() != null ? accessToken : refreshToken;
     }
+
+    public Object checkTokenAndRefreshIfNeed(String username, List<Role> roles, String typeToken) {
+
+        Claims claims = Jwts.claims().setSubject(username);
+        claims.put("roles", getRoleNames(roles));
+
+        Date now = new Date();
+        Date validity;
+        AccessToken accessToken = new AccessToken();
+        RefreshToken refreshToken = new RefreshToken();
+
+        if ("access".equals(typeToken)) {
+            validity = new Date(now.getTime() + validityAccessInMilliseconds);
+            accessToken.setUsername(username);
+            accessToken.setCreated(now);
+            accessToken.setUpdated(validity);
+        } else {
+            validity = new Date(now.getTime() + validityRefreshInMilliseconds);
+            refreshToken.setUsername(username);
+            refreshToken.setCreated(now);
+            refreshToken.setUpdated(validity);
+        }
+
+        String token = Jwts.builder()//
+                .setClaims(claims)//
+                .setIssuedAt(now)//
+                .setExpiration(validity)//
+                .signWith(SignatureAlgorithm.HS256, secret)//
+                .compact();
+
+        if ("access".equals(typeToken)) {
+            accessToken.setAccessToken(token);
+        } else {
+            refreshToken.setRefreshToken(token);
+        }
+
+        return accessToken.getAccessToken() != null ? accessToken : refreshToken;
+    }
+
+    public String resultTokenMap(RefreshTokenDto token) throws IOException {
+
+        String base64EncodedBody = token.toString().split("\\.")[1];
+        org.apache.tomcat.util.codec.binary.Base64 base64Url = new org.apache.tomcat.util.codec.binary.Base64(true);
+        //token_body
+        String body = new String(base64Url.decode(base64EncodedBody));
+        HashMap resultTokenMap = new ObjectMapper().readValue(body, HashMap.class);
+        return  resultTokenMap.get("sub").toString();
+    }
+
 
     public Authentication getAuthentication(String token) {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsername(token));
