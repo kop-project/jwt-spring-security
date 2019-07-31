@@ -1,10 +1,7 @@
 package com.example.demo.security.jwt;
 
 import com.example.demo.dto.RefreshTokenDto;
-import com.example.demo.model.AccessToken;
-import com.example.demo.model.RefreshToken;
-import com.example.demo.model.Role;
-import com.example.demo.model.TokenEntity;
+import com.example.demo.model.*;
 import com.example.demo.repository.AccessTokenRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.*;
@@ -98,42 +95,14 @@ public class JwtTokenProvider {
         return accessToken.getAccessToken() != null ? accessToken : refreshToken;
     }
 
-    public Object checkTokenAndRefreshIfNeed(String username, List<Role> roles, String typeToken) {
-
-        Claims claims = Jwts.claims().setSubject(username);
-        claims.put("roles", getRoleNames(roles));
-
+    public Object checkToken(RefreshToken refreshToken) {
         Date now = new Date();
-        Date validity;
-        AccessToken accessToken = new AccessToken();
-        RefreshToken refreshToken = new RefreshToken();
 
-        if ("access".equals(typeToken)) {
-            validity = new Date(now.getTime() + validityAccessInMilliseconds);
-            accessToken.setUsername(username);
-            accessToken.setCreated(now);
-            accessToken.setUpdated(validity);
+        if (now.getTime() < refreshToken.getUpdated().getTime()) {
+            return  refreshToken;
         } else {
-            validity = new Date(now.getTime() + validityRefreshInMilliseconds);
-            refreshToken.setUsername(username);
-            refreshToken.setCreated(now);
-            refreshToken.setUpdated(validity);
+            return null;
         }
-
-        String token = Jwts.builder()//
-                .setClaims(claims)//
-                .setIssuedAt(now)//
-                .setExpiration(validity)//
-                .signWith(SignatureAlgorithm.HS256, secret)//
-                .compact();
-
-        if ("access".equals(typeToken)) {
-            accessToken.setAccessToken(token);
-        } else {
-            refreshToken.setRefreshToken(token);
-        }
-
-        return accessToken.getAccessToken() != null ? accessToken : refreshToken;
     }
 
     public String resultTokenMap(RefreshTokenDto token) throws IOException {
@@ -143,7 +112,7 @@ public class JwtTokenProvider {
         //token_body
         String body = new String(base64Url.decode(base64EncodedBody));
         HashMap resultTokenMap = new ObjectMapper().readValue(body, HashMap.class);
-        return  resultTokenMap.get("sub").toString();
+        return resultTokenMap.get("sub").toString();
     }
 
 

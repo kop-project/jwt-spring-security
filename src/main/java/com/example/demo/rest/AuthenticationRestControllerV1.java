@@ -92,17 +92,26 @@ public class AuthenticationRestControllerV1 {
 
         String username = jwtTokenProvider.resultTokenMap(token);
         User user = userService.findByUsername(username);
-
+        AccessToken accessToken;
+        RefreshToken refreshToken;
         if (user != null) {
-            RefreshToken refreshToken = refreshTokenRepository.findByUsername(user.getUsername());
+            refreshToken = refreshTokenRepository.findByUsername(user.getUsername());
             //jwtTokenProvider.
-            if (token.getToken().equals(refreshToken.getRefreshToken()))
+            if (token.getToken().equals(refreshToken.getRefreshToken())) {
+                if (jwtTokenProvider.checkToken(refreshToken) != null) {
+
+                    accessToken = (AccessToken) jwtTokenProvider.createToken(username, user.getRoles(), "access");
+                    refreshToken = (RefreshToken) jwtTokenProvider.createToken(username, user.getRoles(), "refresh");
+
+                    Map<Object, Object> response = new HashMap<>();
+
+                    response.put("access_token", accessToken.getAccessToken());
+                    response.put("refresh_token", refreshToken.getRefreshToken());
+                    response.put("expires_in", accessToken.getUpdated().getTime());
+                    return ResponseEntity.ok(response);
+                }
+            }
         }
-
-        Map<Object, Object> response = new HashMap<>();
-
-
-        System.out.printf("123");
 
         return null;
     }
